@@ -1,0 +1,12 @@
+description "run queue manager"
+author      "max"
+
+start on filesystem and started networking
+stop on shutdown
+
+script
+    exec watch -n60 RUN_SCRIPTS_DIR/run-manager.sh
+end script
+
+respawn
+respawn limit 10 90

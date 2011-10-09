@@ -1,0 +1,12 @@
+description "run queue worker"
+author      "max"
+
+start on filesystem and started networking
+stop on shutdown
+
+script
+    exec watch -n10 RUN_SCRIPTS_DIR/run-worker.sh
+end script
+
+respawn
+respawn limit 10 90
