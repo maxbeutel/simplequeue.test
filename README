@@ -1,0 +1,41 @@
+This is some explorative coding on how to implement a scalable and high available message queue using PHP, mySQL and basic unix tools. 
+
+The basic idea:
+
+- store jobs in a mysql table
+- when a job is stored, it gets a process id randomly assigned (from 1 to Y, where Y is the maximum amount of concurrent worker processes, in this case 24)
+- start every X seconds Y concurrent worker scripts, each gets the process id as a command line argument
+- the worker scripts pull the most recent job for their process id from the queue, work on it, and mark it as done 
+- the worker scripts have a maximum execution time of Z seconds (controlled via scripts/util/timeout.sh, set_time_limit() in PHP didnt work reliably enough)
+- each worker script can die at any time - the job is reenqueued by the manager process
+- run every X seconds a manager script which deletes finished jobs, re-enqueues broken jobs up to a certain limit (retry_count) etc.
+
+If one wants more or less then 24 jobs, edit client.php the line which says mt_rand(1, 24) and adapt the amount of concurrent worker scripts in scripts/run/run-worker.sh
+
+
+
+The project consists mainly of 3 PHP files and some shell scripts:
+
+client.php - can add new jobs to the queue data table. Messages are passed as json.
+
+worker.php - is ran via CLI, gets the process id as an argument. Fetches the most recent job for its process id from the queue data table, does some stuff with it and marks the row as done.
+
+manager.php - cleans up finished rows, cleans up failed jobs, re-enqueues failed jobs up to a certain limit (retry_count)
+
+There are two upstart scripts:
+
+queue-manager.conf - runs the manager.php script every X seconds via "watch" command, restarts "watch" if killed unusually  (not with "stop")
+
+queue-worker.conf - runs (in this example) 24 concurrent worker scripts every X seconds via "watch", gets also restarted if killed unusually (not with "stop")
+
+
+The queue is as available, stable and scalable as mySQL, PHP and unix are. However, it is not flawless: there are some seams which might or might not create problems under heavy production load:
+
+- mainly concurrency. Maybe the dates should be stored as microtime for additional precicision?
+- is watch really good for production usecases?
+- it is very easy to increase the amount of concurrent worker processes - it can be a bit of a pain to decrease it during production
+
+
+The good thing about these issues: they are fairly obvious. Compared to a closed system like many queues propose this project consists of some 100 lines of code and some very simple shell scripts.
+
+Debugging, logging and monitoring should be fairly trivial to implement.
