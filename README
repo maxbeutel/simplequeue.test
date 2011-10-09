@@ -1,8 +1,6 @@
 This is some explorative coding on how to implement a scalable and high available message queue using PHP, mySQL and basic unix tools. 
 
-
 Be aware: this is just a TEST, there is much error checking/gracefull error handling missing and is only to be seen as a proof of concept!
-
 
 The basic idea:
 
@@ -38,6 +36,7 @@ The queue is as available, stable and scalable as mySQL, PHP and unix are. Howev
 - mainly concurrency. Maybe the dates should be stored as microtime for additional precicision?
 - is watch really good for production usecases?
 - it is very easy to increase the amount of concurrent worker processes - it can be a bit of a pain to decrease it during production
+- apart from that, allmost every error handling is omitted
 
 
 The good thing about these issues: they are fairly obvious. Compared to a closed system like many queues propose this project consists of some 100 lines of code and some very simple shell scripts.
